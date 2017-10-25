@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Beacon Playground</string>
+    <string name="optionImage">Option image</string>
+    <string name="mainImage">Main image</string>
+</resources>
