@@ -6,7 +6,7 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.first_frag.*
+import android.widget.TextView
 
 class FirstFragment : Fragment() {
 
@@ -22,7 +22,7 @@ class FirstFragment : Fragment() {
 
         view?.setBackgroundColor(color)
 
-        infoText.text = colorString
+        view?.findViewById<TextView>(R.id.fragInfoText)?.text = colorString
 
         return view
     }

@@ -23,13 +23,13 @@ class MainActivity : FragmentActivity() {
                 adapter.enable()
         })
 
-        viewPager.adapter = MyPagerAdapter(supportFragmentManager)
+        viewPager.adapter = MyPageAdapter(supportFragmentManager)
 
         registerReceiver(getListener(), IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     }
 
     private fun getTextView(): TextView {
-        return infoText
+        return fragInfoText
     }
 
     override fun onResume() {

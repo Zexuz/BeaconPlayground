@@ -7,7 +7,7 @@
     tools:context="com.example.robin.beaconplayground.MainActivity">
 
     <TextView
-        android:id="@+id/infoText"
+        android:id="@+id/fragInfoText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
