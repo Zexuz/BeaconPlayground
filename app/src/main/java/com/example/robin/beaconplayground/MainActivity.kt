@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,27 +17,65 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val textView = findViewById<TextView>(R.id.infoText)
+        val button = findViewById<Button>(R.id.button2)
+        button.setOnClickListener({
+            val adapter = BluetoothAdapter.getDefaultAdapter()
+            if (adapter.isEnabled)
+                adapter.disable()
+            else
+                adapter.enable()
+        })
 
-        registerReceiver(getListener(textView), IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+        registerReceiver(getListener(), IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     }
 
-    private fun getListener(textView: TextView): BroadcastReceiver {
+    private fun getTextView(): TextView {
+        return findViewById<TextView>(R.id.infoText) as TextView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        verifyBluetoothState(BluetoothAdapter.getDefaultAdapter().state)
+    }
+
+    private fun getListener(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(p0: Context?, p1: Intent?) {
-                if (intent?.action != BluetoothAdapter.ACTION_STATE_CHANGED) return
+                if (p1?.action != BluetoothAdapter.ACTION_STATE_CHANGED) return
 
-                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                val state = p1.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
 
-                textView.text = "Bluetooth is turned ${getStateText(state)}"
+                if (state == BluetoothAdapter.ERROR) {
+                    runOnUiThread({
+                        Toast.makeText(baseContext, "Error bluetooth state", Toast.LENGTH_SHORT).show()
+                    })
+                    return
+                }
+
+                verifyBluetoothState(state)
             }
         }
     }
 
-    private fun getStateText(i: Int): String = when (i) {
-        BluetoothAdapter.STATE_ON -> "on"
-        BluetoothAdapter.STATE_OFF -> "off"
-        else -> "Error"
+    private fun verifyBluetoothState(state: Int) {
+
+        if (state == BluetoothAdapter.STATE_OFF) {
+            setText(false)
+            val intent = Intent(applicationContext, BluetoothActivity::class.java)
+            startActivity(intent)
+            return
+        }
+
+        setText(true)
+    }
+
+
+    private fun setText(isTurnedOn: Boolean) {
+        val textView = getTextView()
+
+        textView.text = if (isTurnedOn)
+            resources.getString(R.string.bluetooth_status_on) else
+            resources.getString(R.string.bluetooth_status_off)
     }
 
 }

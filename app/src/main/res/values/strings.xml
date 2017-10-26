@@ -2,4 +2,9 @@
     <string name="app_name">Beacon Playground</string>
     <string name="optionImage">Option image</string>
     <string name="mainImage">Main image</string>
+    <string name="bluetooth_notTurnedOn">You need to turn on bluetooth in order to use this app</string>
+    <string name="bluetooth_turnOn">Turn on bluetooth</string>
+    <string name="bluetooth_turnOff">Turn of bluetooth</string>
+    <string name="bluetooth_status_off">Bluetooth is off</string>
+    <string name="bluetooth_status_on">Bluetooth is on</string>
 </resources>
