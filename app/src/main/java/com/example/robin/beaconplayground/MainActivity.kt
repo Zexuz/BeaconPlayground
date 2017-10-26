@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.altbeacon.beacon.*
+import org.altbeacon.beacon.service.RangedBeacon
 
 class MainActivity : FragmentActivity(), BeaconConsumer {
 
@@ -39,6 +40,7 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
             alert.show()
         }
 
+        RangedBeacon.setSampleExpirationMilliseconds(5000) //https://stackoverflow.com/questions/25520713/how-to-get-faster-ranging-responses-with-altbeacon
         _beaconManager = BeaconManager.getInstanceForApplication(this)
         _beaconManager.beaconParsers.add(BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT))
 
