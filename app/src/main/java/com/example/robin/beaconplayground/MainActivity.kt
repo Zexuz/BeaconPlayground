@@ -20,7 +20,6 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
 
     private lateinit var _beaconManager: BeaconManager
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -33,11 +32,14 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
 
         viewPager.adapter = MyPageAdapter(supportFragmentManager)
 
-        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            val alert = AlertDialog.Builder(this)
-            alert.setTitle("Needs location")
-            alert.setPositiveButton("Nice!", null)
-            alert.show()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                val alert = AlertDialog.Builder(this)
+                alert.setTitle("Needs location")
+                alert.setPositiveButton("Nice!", null)
+                alert.show()
+            }
+            //todo add that we request permission
         }
 
         RangedBeacon.setSampleExpirationMilliseconds(5000) //https://stackoverflow.com/questions/25520713/how-to-get-faster-ranging-responses-with-altbeacon
@@ -62,15 +64,14 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
         _beaconManager.unbind(this)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBeaconServiceConnect() {
         _beaconManager.addRangeNotifier({ beacons: MutableCollection<Beacon>, region: Region ->
             if (beacons.size > 0) {
                 val distance = "The first beacon I see is about ${"%.2f".format(beacons.iterator().next().distance)} meters away"
-                    runOnUiThread({
-                        getTextView().text = distance
-                        viewPager.currentItem = if (beacons.iterator().next().distance >2) 1 else 0
-                    })
+                runOnUiThread({
+                    getTextView().text = distance
+                    viewPager.currentItem = if (beacons.iterator().next().distance > 2) 1 else 0
+                })
                 Log.i("Beacon distance", distance)
             }
         })
