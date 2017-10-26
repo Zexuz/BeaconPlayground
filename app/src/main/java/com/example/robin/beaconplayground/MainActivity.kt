@@ -66,7 +66,8 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
             if (beacons.size > 0) {
                 val distance = "The first beacon I see is about ${"%.2f".format(beacons.iterator().next().distance)} meters away"
                     runOnUiThread({
-                        getTextView().text = distance;
+                        getTextView().text = distance
+                        viewPager.currentItem = if (beacons.iterator().next().distance >2) 1 else 0
                     })
                 Log.i("Beacon distance", distance)
             }
