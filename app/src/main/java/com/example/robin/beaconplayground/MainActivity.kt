@@ -21,11 +21,14 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
 
     private lateinit var _beaconManager: BeaconManager
 
+    private lateinit var ourBeacons:List<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        ourBeacons = listOf("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+        
         turnOffBluetoothButton.setOnClickListener({
             val adapter = BluetoothAdapter.getDefaultAdapter()
             if (adapter.isEnabled)
@@ -61,6 +64,7 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
         RangedBeacon.setSampleExpirationMilliseconds(2000) //https://stackoverflow.com/questions/25520713/how-to-get-faster-ranging-responses-with-altbeacon
         _beaconManager = BeaconManager.getInstanceForApplication(this)
         _beaconManager.beaconParsers.add(BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT))
+        _beaconManager.beaconParsers.add(BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")) //Ibeacon
 
         _beaconManager.bind(this)
         registerReceiver(getListener(), IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
@@ -98,7 +102,8 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
     override fun onBeaconServiceConnect() {
         _beaconManager.addRangeNotifier({ beacons: MutableCollection<Beacon>, region: Region ->
             if (!beacons.isNotEmpty()) return@addRangeNotifier
-            if (beacons.toList().find{it.id1.toString().trim() == uuid.text.toString().trim() } == null) return@addRangeNotifier
+
+            if (beacons.toList().find{it.id1.toString().trim() == ourBeacons.first().toString().trim() } == null) return@addRangeNotifier
 
             val distance = "The first beacon I see is about ${"%.2f".format(beacons.iterator().next().distance)} meters away"
             runOnUiThread({
