@@ -7,9 +7,10 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.RequiresApi
 import android.support.v4.app.FragmentActivity
 import android.util.Log
+import android.view.inputmethod.EditorInfo
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,16 +21,21 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
 
     private lateinit var _beaconManager: BeaconManager
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         turnOffBluetoothButton.setOnClickListener({
             val adapter = BluetoothAdapter.getDefaultAdapter()
-            if (!adapter.isEnabled)
-                adapter.enable()
+            if (adapter.isEnabled)
+                adapter.disable()
         })
 
+        seekBar.setOnSeekBarChangeListener(SeekBarListener(seekbarValue))
+
+
+        getTextView().text = "Searching for beacon!"
         viewPager.adapter = MyPageAdapter(supportFragmentManager)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -42,12 +48,37 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
             //todo add that we request permission
         }
 
-        RangedBeacon.setSampleExpirationMilliseconds(5000) //https://stackoverflow.com/questions/25520713/how-to-get-faster-ranging-responses-with-altbeacon
+        uuid.setOnEditorActionListener(TextView.OnEditorActionListener { textView, i, keyEvent ->
+            if (i == EditorInfo.IME_ACTION_DONE) {
+                Toast.makeText(this, "Now searching for ${uuid.text}", Toast.LENGTH_SHORT).show()
+                _beaconManager.startRangingBeaconsInRegion(Region(uuid.text.toString(), null, null, null))
+                return@OnEditorActionListener true
+            }
+            return@OnEditorActionListener false
+        })
+
+
+        RangedBeacon.setSampleExpirationMilliseconds(2000) //https://stackoverflow.com/questions/25520713/how-to-get-faster-ranging-responses-with-altbeacon
         _beaconManager = BeaconManager.getInstanceForApplication(this)
         _beaconManager.beaconParsers.add(BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT))
 
         _beaconManager.bind(this)
         registerReceiver(getListener(), IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+    }
+
+    class SeekBarListener(val textView: TextView) : SeekBar.OnSeekBarChangeListener {
+
+        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+            textView.text = p1.toString()
+        }
+
+        override fun onStartTrackingTouch(p0: SeekBar?) {
+        }
+
+        override fun onStopTrackingTouch(p0: SeekBar?) {
+        }
+
+
     }
 
     private fun getTextView(): TextView {
@@ -66,14 +97,15 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
 
     override fun onBeaconServiceConnect() {
         _beaconManager.addRangeNotifier({ beacons: MutableCollection<Beacon>, region: Region ->
-            if (beacons.size > 0) {
-                val distance = "The first beacon I see is about ${"%.2f".format(beacons.iterator().next().distance)} meters away"
-                runOnUiThread({
-                    getTextView().text = distance
-                    viewPager.currentItem = if (beacons.iterator().next().distance > 2) 1 else 0
-                })
-                Log.i("Beacon distance", distance)
-            }
+            if (!beacons.isNotEmpty()) return@addRangeNotifier
+            if (beacons.toList().find{it.id1.toString().trim() == uuid.text.toString().trim() } == null) return@addRangeNotifier
+
+            val distance = "The first beacon I see is about ${"%.2f".format(beacons.iterator().next().distance)} meters away"
+            runOnUiThread({
+                getTextView().text = distance
+                viewPager.currentItem = if (beacons.iterator().next().distance > seekBar.progress) 1 else 0
+            })
+            Log.i("Beacon distance", distance)
         })
 
         try {
@@ -104,22 +136,10 @@ class MainActivity : FragmentActivity(), BeaconConsumer {
     private fun verifyBluetoothState(state: Int) {
 
         if (state == BluetoothAdapter.STATE_OFF) {
-            setText(false)
             val intent = Intent(applicationContext, BluetoothActivity::class.java)
             startActivity(intent)
             return
         }
-
-        setText(true)
-    }
-
-
-    private fun setText(isTurnedOn: Boolean) {
-        val textView = getTextView()
-
-        textView.text = if (isTurnedOn)
-            resources.getString(R.string.bluetooth_status_on) else
-            resources.getString(R.string.bluetooth_status_off)
     }
 
 }
